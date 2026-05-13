@@ -3,6 +3,19 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.12.0.0] - 2026-05-13
+
+### Added (MINOR · 配额感知 + 整合 claude-quotas)
+
+- **`plugin/skills/quota-aware-loop/SKILL.md`** (新 skill): 让 Claude 主动用 `claude-quotas` MCP `check_quota` 在 /loop / ScheduleWakeup / 长任务前节制。前置依赖 claude-quotas plugin。含决策表 (5h 80-95% / 7d 70-95% 多档) + delaySeconds 计算伪代码 + 与 anti-slacking-auditor 联动方案 + token 经济分析 (每天 ~3000 token 防止周末烧爆)。
+- **`skill-match-announcer.sh` v0.12.0.0**: 条件注入 quota-aware 提示。检测 prompt 含 `/loop` / `ScheduleWakeup` / `继续做` / `跑完` / `长任务` / `部署` 等关键词时, 在 [ACK]+[SkillMatch] 之后追加 quota 检查铁律提示。普通 prompt 不注入 (token 经济)。
+
+### Note · 架构
+
+- Hook 内不能直接调 MCP tool (Claude Code 架构限制), 因此通过 (1) skill 文档指导 Claude 主动调 + (2) 关键词触发条件提示 双路径实现配额感知。
+- claude-quotas plugin 独立维护, fruity-skills 仅引用其 MCP tool, 不重复实现 quota 拉取。
+
+
 ## [0.11.0.0] - 2026-05-13
 
 ### Added (MINOR · 评分体系 + 任务覆盖度 + bug 检测 + 逻辑链路审查)
