@@ -5,15 +5,15 @@
     "email": "donaldholmestte@gmail.com"
   },
   "metadata": {
-    "description": "FruityMaxine 的私人 Claude Code 规则集 —— skill 显式匹配 hook + 反偷懒审核 sub-agent",
-    "version": "0.1.0.0"
+    "description": "FruityMaxine 个人 Claude Code skill 全家桶 — 整合 better-memory 跨会话记忆 + skill 显式匹配 hook + anti-slacking-auditor 探索式审核 sub-agent (基于 ECC code-explorer 改造,不通过不能停)",
+    "version": "0.2.0.0"
   },
   "plugins": [
     {
       "name": "fruity-skills",
       "source": "./plugin",
-      "description": "FruityMaxine 跨设备迁移 Claude Code 时随身携带的规则集合：每条消息后显式声明 skill 匹配结果；每次 Claude 试图结束 turn 时强制调用 anti-slacking-auditor sub-agent 审核",
-      "version": "0.1.0.0",
+      "description": "个人版 skill 全家桶: 整合 better-memory (公共版的本地副本) + [ACK]+[SkillMatch] 双行强制声明 hook + 反偷懒探索式审核 sub-agent (沿用 ECC code-explorer 5 步探索基因,目标改为 PASS/FAIL 评分,主 Claude 必须改到 PASS 才能结束 turn)",
+      "version": "0.2.0.0",
       "author": {
         "name": "FruityMaxine",
         "email": "donaldholmestte@gmail.com"
@@ -25,14 +25,19 @@
         "anti-slacking",
         "skill-matching",
         "hooks",
-        "audit"
+        "audit",
+        "memory",
+        "explore",
+        "better-memory"
       ],
       "category": "workflow",
       "tags": [
         "personal",
         "rules",
         "anti-slacking",
-        "audit"
+        "audit",
+        "memory",
+        "explore"
       ],
       "strict": false
     }

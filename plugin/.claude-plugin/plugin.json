@@ -1,7 +1,7 @@
 {
   "name": "fruity-skills",
-  "version": "0.1.0.0",
-  "description": "FruityMaxine 跨设备迁移 Claude Code 时随身携带的规则集合：每条消息后显式声明 skill 匹配结果；每次 Claude 试图结束 turn 时强制调用 anti-slacking-auditor sub-agent 审核",
+  "version": "0.2.0.0",
+  "description": "个人版 skill 全家桶: 整合 better-memory + [ACK]+[SkillMatch] 双行强制声明 hook + 反偷懒探索式审核 sub-agent (沿用 ECC code-explorer 5 步探索基因,目标改为 PASS/FAIL 评分,主 Claude 必须改到 PASS 才能结束 turn)",
   "author": {
     "name": "FruityMaxine",
     "email": "donaldholmestte@gmail.com"
@@ -13,8 +13,15 @@
     "anti-slacking",
     "skill-matching",
     "hooks",
-    "audit"
+    "audit",
+    "memory",
+    "explore",
+    "better-memory"
   ],
-  "agents": ["./agents/"],
-  "skills": ["./skills/"]
+  "agents": [
+    "./agents/"
+  ],
+  "skills": [
+    "./skills/"
+  ]
 }
