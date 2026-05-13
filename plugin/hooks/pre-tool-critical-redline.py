@@ -80,6 +80,30 @@ def check_bash(cmd: str) -> str:
     if re.search(r"history\s+-c\b|>\s*~?/.bash_history\b", cmd):
         return f"清 shell history: {cmd[:60]}. 看似掩盖痕迹, 不允许默认行为."
 
+    if re.search(r"git\s+config\s+(--global\s+)?user\.(name|email)\s+", cmd):
+        if not re.search(r"(FruityMaxine|donaldholmestte@gmail\.com)", cmd, re.IGNORECASE):
+            return (f"git config user.name/email 改成非 FruityMaxine 身份: {cmd[:100]}. "
+                    "用户独占 git author/contributor, 不允许 AI / 别人邮箱替换。"
+                    "若确需修改 (新设备初装), 必须用 FruityMaxine + donaldholmestte@gmail.com。")
+
+    if re.search(r"git\s+remote\s+(set-url|add)\s+origin\s+", cmd):
+        if not re.search(r"(github\.com[:/]FruityMaxine/|x-access-token:)", cmd):
+            return (f"git remote 改到非 FruityMaxine 仓: {cmd[:100]}. "
+                    "防止误推到他人仓。明确说明授权后才允许。")
+
+    if re.search(r"\b(npm|yarn|pnpm)\s+publish\b", cmd):
+        return (f"npm/yarn publish: {cmd[:80]}. "
+                "对个人项目通常不需要发布到公网 registry。明确告知用户并确认后才允许。")
+    if re.search(r"\bpip\s+upload\b|twine\s+upload\b", cmd):
+        return (f"pip/twine upload: {cmd[:80]}. 发布 Python 包到 PyPI。明确告知用户确认。")
+    if re.search(r"\bcargo\s+publish\b", cmd):
+        return (f"cargo publish: {cmd[:80]}. 发布 Rust crate。明确告知用户确认。")
+    if re.search(r"\bdocker\s+push\b", cmd):
+        return (f"docker push: {cmd[:80]}. 推送镜像到 registry。明确告知用户确认。")
+
+    if re.search(r"\bgh\s+release\s+(create|edit|delete)\b", cmd):
+        return (f"gh release {cmd[:80]}. 公开发布版本。明确告知用户并确认。")
+
     return ""
 
 

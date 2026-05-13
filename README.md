@@ -1,13 +1,13 @@
 # fruity-skills
 
 [![test](https://github.com/FruityMaxine/fruity-skills/actions/workflows/test.yml/badge.svg)](https://github.com/FruityMaxine/fruity-skills/actions/workflows/test.yml)
-[![version](https://img.shields.io/badge/version-0.7.0.0-blue)](https://github.com/FruityMaxine/fruity-skills/releases)
+[![version](https://img.shields.io/badge/version-0.8.0.0-blue)](https://github.com/FruityMaxine/fruity-skills/releases)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-36%20pass-brightgreen)](plugin/tests/run-tests.sh)
+[![tests](https://img.shields.io/badge/tests-41%20pass-brightgreen)](plugin/tests/run-tests.sh)
 
 FruityMaxine 的私人 Claude Code skill 全家桶,跨设备迁移时一站式安装。
 
-**当前版本**: v0.7.0.0
+**当前版本**: v0.8.0.0
 **作者**: FruityMaxine (donaldholmestte@gmail.com)
 
 ## 它是什么

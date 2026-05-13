@@ -266,7 +266,28 @@ out=$(echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/x.py","content"
 decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null || echo "none")
 assert "PreTool 正常 DB URL 无密码放行" "none" "$decision"
 
-# Test 33: sync-better-memory.sh --check 模式
+# Test 33-37: v0.8.0.0 新增 git/publish 红线
+out=$(echo '{"tool_name":"Bash","tool_input":{"command":"git config user.email claude@anthropic.com"}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 git config 改非 FruityMaxine 邮箱拦截" "block" "$decision"
+
+out=$(echo '{"tool_name":"Bash","tool_input":{"command":"git config user.email donaldholmestte@gmail.com"}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null || echo "none")
+assert "PreTool 正常 git config 改 FruityMaxine 邮箱放行" "none" "$decision"
+
+out=$(echo '{"tool_name":"Bash","tool_input":{"command":"git remote set-url origin https://github.com/Someone/repo.git"}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 git remote 改到非 FruityMaxine 仓拦截" "block" "$decision"
+
+out=$(echo '{"tool_name":"Bash","tool_input":{"command":"npm publish"}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 npm publish 拦截" "block" "$decision"
+
+out=$(echo '{"tool_name":"Bash","tool_input":{"command":"gh release create v1.0"}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 gh release create 拦截" "block" "$decision"
+
+# Test 38: sync-better-memory.sh --check 模式
 # 29: 当 SKILL.md 与公共仓一致时 exit 0
 SYNC=/srv/agent-workspace/projects/2026-05-13-fruity-skills/plugin/scripts/sync-better-memory.sh
 if [[ -f "$SYNC" ]]; then

@@ -3,6 +3,20 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.8.0.0] - 2026-05-13
+
+### Added (MINOR · commit 工作流闭环 + 身份/发布红线)
+
+- **`plugin/agents/commit-msg-writer.md`** (新 sub-agent): 生成 Conventional Commits 格式 commit msg。完成 commit 工作流四件套 (anti-slacking-auditor + version-bumper + changelog-writer + commit-msg-writer)。输出 one-liner / multi-line / reasoning, **绝不**含 Co-Authored-By trailer。
+- **PreToolUse 新增 5 类 git/publish 红线**:
+  - `git config user.name|user.email` 改成非 FruityMaxine 身份 → block (除非显式含 FruityMaxine/donaldholmestte@gmail.com)
+  - `git remote set-url origin` 改到非 FruityMaxine 仓 → block (除非含 `github.com[:/]FruityMaxine/` 或 `x-access-token:` token URL)
+  - `npm/yarn/pnpm publish` → block (个人项目不应公开发布)
+  - `pip upload` / `twine upload` / `cargo publish` / `docker push` → block
+  - `gh release create/edit/delete` → block (公开发布需确认)
+- **测试 36 → 41 用例**: 5 条新 git/publish 红线 + 1 条 git config FruityMaxine 邮箱放行验证
+
+
 ## [0.7.0.0] - 2026-05-13
 
 ### Added (MINOR · 2 个新 sub-agent + 4 类新 secret 红线)
