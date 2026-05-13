@@ -3,6 +3,26 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.4.0.0] - 2026-05-13
+
+### Added (MINOR · PreToolUse 红线拦截 + GitHub Actions CI)
+
+- **PreToolUse 红线拦截 hook** (`plugin/hooks/pre-tool-critical-redline.{sh,py}`): 事前拦截 critical 违规, 不等 anti-slacking-auditor 事后审。matcher: `Write|Edit|MultiEdit|Bash`。拦截 6 类:
+  - Bash: `git commit` 含 `Co-Authored-By` trailer
+  - Bash: `git push --force/--no-verify` 到 main/master
+  - Bash: 危险 `rm -rf /` / `mkfs` / `dd of=/dev/sd*`
+  - Write/Edit: 内容含 `listen|bind|host 0.0.0.0`
+  - Write/Edit: 内容含 AWS / GitHub PAT / OpenAI / PEM private key 字面值
+  - Write/Edit: `.service` 文件含行尾中文注释 (systemd 静默忽略陷阱)
+  命中输出 `decision=block + reason`, 主 Claude 立即修改后重试。
+- **GitHub Actions CI** (`.github/workflows/test.yml`): push/PR 到 main 自动跑 jq 校验 + bash -n + py_compile + 完整 23 用例测试套件。
+- **测试扩展**: 15 → 23 用例 (新增 8 个 PreToolUse 红线场景 + 正常路径放行验证)
+
+### Changed
+
+- `hooks.json` 新增 PreToolUse 注册条目 `fruity:pre-tool:critical-redline`
+
+
 ## [0.3.0.0] - 2026-05-13
 
 ### Added (MINOR · 测试套件 + LICENSE)

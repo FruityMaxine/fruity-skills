@@ -14,6 +14,20 @@
         "id": "fruity:user-prompt:skill-match-announcer"
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-tool-critical-redline.sh\"",
+            "timeout": 5
+          }
+        ],
+        "description": "Intercept critical red-line violations before tool execution (Co-Authored-By in commit, bind 0.0.0.0, secrets in file, systemd inline comments, dangerous rm/mkfs/dd)",
+        "id": "fruity:pre-tool:critical-redline"
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit|Bash",

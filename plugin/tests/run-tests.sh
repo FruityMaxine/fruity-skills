@@ -172,6 +172,48 @@ out=$(mock_input '"stop_hook_active":true' | bash "$HOOKS/stop-anti-slacking.sh"
 decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
 assert "Stop stop_hook_active=true 防死循环" "none" "$decision"
 
+# ===== PreToolUse 红线测试 =====
+
+# Test 13: 红线 Bash git commit Co-Authored-By → block
+out=$(echo '{"tool_name":"Bash","tool_input":{"command":"git commit -m \"feat\\n\\nCo-Authored-By: Claude <c@a.com>\""}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 Co-Authored-By 拦截" "block" "$decision"
+
+# Test 14: 红线 Write bind 0.0.0.0 → block
+out=$(echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/x.conf","content":"listen 0.0.0.0:8080"}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 bind 0.0.0.0 拦截" "block" "$decision"
+
+# Test 15: 红线 GitHub token → block
+out=$(echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/c.py","content":"K=\"ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\""}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 GitHub token 拦截" "block" "$decision"
+
+# Test 16: 红线 systemd 行尾中文注释 → block
+out=$(printf '{"tool_name":"Write","tool_input":{"file_path":"/etc/systemd/system/foo.service","content":"[Service]\\nMemoryMax=1G    # 中文\\n"}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 systemd 行尾中文注释拦截" "block" "$decision"
+
+# Test 17: 红线 rm -rf / → block
+out=$(echo '{"tool_name":"Bash","tool_input":{"command":"rm -rf /"}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 rm -rf / 拦截" "block" "$decision"
+
+# Test 18: 正常 Bash ls 应放行
+out=$(echo '{"tool_name":"Bash","tool_input":{"command":"ls -la"}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null || echo "none")
+assert "PreTool 正常 ls 放行" "none" "$decision"
+
+# Test 19: 正常 Write markdown 应放行
+out=$(echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/x.md","content":"# Hello\nworld"}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null || echo "none")
+assert "PreTool 正常 markdown 放行" "none" "$decision"
+
+# Test 20: 红线 Edit new_string 含 bind 0.0.0.0 → block
+out=$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/cfg.toml","old_string":"x","new_string":"bind = \"0.0.0.0\""}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 Edit new_string 含 bind 0.0.0.0 拦截" "block" "$decision"
+
 # 汇总
 echo ""
 echo "=== 结果: $PASS pass / $FAIL fail ==="
