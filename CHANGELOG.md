@@ -3,6 +3,24 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.7.0.0] - 2026-05-13
+
+### Added (MINOR · 2 个新 sub-agent + 4 类新 secret 红线)
+
+- **`plugin/agents/version-bumper.md`**: 决策 VERSION 升哪段 (MAJOR/MINOR/PATCH/BUILD) 的 sub-agent。读 git diff + commit 草稿 + 当前 VERSION, 给推荐 + 一句话理由 + 右侧归零后的新版本号。配合 anti-slacking-auditor 的 VERSION_BUMP 维度避免升错。
+- **`plugin/agents/changelog-writer.md`**: 生成 Keep-a-Changelog 格式段落的 sub-agent。读 git diff + 新版本号, 输出可直接插入 CHANGELOG.md 顶部的 markdown 文本。配套 version-bumper 形成 commit 三件套 (auditor + bumper + writer)。
+- **PreToolUse 新增 4 类 secret 红线**:
+  - DB 连接串嵌入密码 (`mongodb://user:pass@`, `postgres://`, `mysql://`, `redis://`, `amqp://`)
+  - Slack token (`xoxb-/xoxp-` 严格 4 段格式)
+  - Google API key (`AIza` + 35 字符)
+  - 硬编码 env 字面 (`JWT_SECRET=`/`SESSION_SECRET=`/`DJANGO_SECRET_KEY=` 等 + 16+ 字符值)
+- **测试 32 → 36 用例**: 新增 3 条 secret 红线 + 1 条 DB URL 无密码放行验证
+
+### Note
+
+- Slack/Google 红线模式严格匹配真实 token 格式 (mock 字符串需符合规范长度才会被拦, 这是设计预期不是 bug)
+
+
 ## [0.6.0.0] - 2026-05-13
 
 ### Added (MINOR · PreToolUse 红线扩展 + 测试到 32 用例)

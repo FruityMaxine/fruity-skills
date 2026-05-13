@@ -248,7 +248,25 @@ out=$(echo '{"tool_name":"Bash","tool_input":{"command":"chmod 755 ./script.sh"}
 decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null || echo "none")
 assert "PreTool 正常 chmod 755 放行" "none" "$decision"
 
-# Test 29-30: sync-better-memory.sh --check 模式
+# Test 29-31: v0.7.0.0 新增 secret 红线
+out=$(echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/x.py","content":"DB=\"mongodb://admin:secret123@db.example.com/app\""}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 DB 连接串密码拦截" "block" "$decision"
+
+out=$(echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/x.py","content":"DB=\"postgresql://user:pwd@localhost:5432/db\""}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 Postgres 连接串拦截" "block" "$decision"
+
+out=$(echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/x.py","content":"JWT_SECRET = \"abcdefghijklmnopqrstuvwxyz1234567890\""}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
+assert "PreTool 红线 JWT_SECRET 硬编码拦截" "block" "$decision"
+
+# Test 32: 正常 DB URL (无密码) 应放行
+out=$(echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/x.py","content":"DB=\"mongodb://localhost:27017/app\""}}' | bash "$HOOKS/pre-tool-critical-redline.sh" 2>/dev/null)
+decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null || echo "none")
+assert "PreTool 正常 DB URL 无密码放行" "none" "$decision"
+
+# Test 33: sync-better-memory.sh --check 模式
 # 29: 当 SKILL.md 与公共仓一致时 exit 0
 SYNC=/srv/agent-workspace/projects/2026-05-13-fruity-skills/plugin/scripts/sync-better-memory.sh
 if [[ -f "$SYNC" ]]; then

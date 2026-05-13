@@ -98,6 +98,10 @@ def check_write_content(file_path: str, content: str) -> str:
         (r"gho_[A-Za-z0-9]{36,}", "GitHub OAuth token"),
         (r"sk-[A-Za-z0-9]{20,}", "OpenAI/Anthropic SK key"),
         (r"-----BEGIN\s+(RSA\s+|EC\s+|OPENSSH\s+|DSA\s+)?PRIVATE\s+KEY-----", "PEM private key"),
+        (r"(?:mongodb|postgres(?:ql)?|mysql|redis|amqp)://[^:\s]+:[^@\s]+@[^\s/]+", "DB connection string with embedded password"),
+        (r"xox[bp]-[0-9]+-[0-9]+-[0-9]+-[a-zA-Z0-9]+", "Slack bot/user token"),
+        (r"AIza[0-9A-Za-z_-]{35}", "Google API key"),
+        (r"\b(?:DOCKER_AUTH|JWT_SECRET|SESSION_SECRET|FLASK_SECRET|DJANGO_SECRET_KEY)\s*=\s*['\"][^'\"]{16,}['\"]", "Hardcoded secret env literal"),
     ]
     for pat, name in secret_patterns:
         if re.search(pat, content):
