@@ -3,6 +3,13 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.8.0.1] - 2026-05-13
+
+### Changed (BUILD · 文档)
+
+- **`plugin/agents/README.md`** (新): 四件套 sub-agent 协作图 + 职责矩阵 + 红线归属表 + 主 Claude 标准 commit 流程模板。说明 anti-slacking-auditor / version-bumper / changelog-writer / commit-msg-writer 互不重叠、各司其职。
+
+
 ## [0.8.0.0] - 2026-05-13
 
 ### Added (MINOR · commit 工作流闭环 + 身份/发布红线)
