@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "FruityMaxine 个人 Claude Code skill 全家桶 · 经 2 轮 sub-agent harness-construction 评审重设计 anti-slacking-auditor: 双因子激活门 + 三级 severity (critical/major/minor) + 红线硬循环 + 3-iter 上限 + history.json 状态持久化 + 三档绕过 + Bash 只读白名单。整合 better-memory + sync 脚本",
-    "version": "0.9.1.1"
+    "version": "0.9.1.2"
   },
   "plugins": [
     {
       "name": "fruity-skills",
       "source": "./plugin",
       "description": "经 2 轮多 agent 评审重设计 anti-slacking-auditor: 5 步探索 + 双因子激活门 + critical 红线不可绕过 (Co-Authored-By/bind 0.0.0.0/systemd 行尾注释/非中文/secrets) + major/minor 走 3-iter PASS_WITH_DEBT 降级 + 2-strike 升级 + history.json 跨调用状态 + 三档绕过 (env/keyword/flag) + Bash 只读白名单",
-      "version": "0.9.1.1",
+      "version": "0.9.1.2",
       "author": {
         "name": "FruityMaxine",
         "email": "donaldholmestte@gmail.com"
