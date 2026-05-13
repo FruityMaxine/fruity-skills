@@ -3,6 +3,18 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.9.0.0] - 2026-05-13
+
+### Added (MINOR · 第 5 个 sub-agent 完成 commit/PR 闭环)
+
+- **`plugin/agents/pr-creator.md`**: 第 5 个 sub-agent, 读 `git log main..HEAD` + diff + 现有 PR 模板 (如有), 输出可直接喂给 `gh pr create` 的 title + body markdown。补全 5 阶 commit/PR 工作流: auditor + version-bumper + changelog-writer + commit-msg-writer + pr-creator。
+- **`plugin/agents/README.md` 更新**: 新增 pr-creator 条目, 未来扩展清单去掉已实现项, 保留 release-notes / dep-bumper。
+
+### Note
+
+pr-creator 输出 PR body 不复制 CHANGELOG (那是 changelog-writer 的领域); body 给 reviewer 一眼看懂 + 风险评估 + 测试 checklist。
+
+
 ## [0.8.0.1] - 2026-05-13
 
 ### Changed (BUILD · 文档)

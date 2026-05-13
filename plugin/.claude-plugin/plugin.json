@@ -1,6 +1,6 @@
 {
   "name": "fruity-skills",
-  "version": "0.8.0.1",
+  "version": "0.9.0.0",
   "description": "经 2 轮多 agent 评审重设计 anti-slacking-auditor: 5 步探索 + 双因子激活门 + critical 红线不可绕过 (Co-Authored-By/bind 0.0.0.0/systemd 行尾注释/非中文/secrets) + major/minor 走 3-iter PASS_WITH_DEBT 降级 + 2-strike 升级 + history.json 跨调用状态 + 三档绕过 (env/keyword/flag) + Bash 只读白名单",
   "author": {
     "name": "FruityMaxine",

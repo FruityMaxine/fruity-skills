@@ -96,10 +96,14 @@
 10. 可选 git push
 ```
 
-## 不在四件套之内的 sub-agent
+## 第 5 个: pr-creator (v0.9.0.0)
 
-未来扩展可加:
-- `pr-creator`: 生成 PR title + body + reviewer 建议
+| Sub-agent | 职责 | 输出 | 何时触发 |
+|---|---|---|---|
+| **pr-creator** | 生成 PR title + body 喂给 `gh pr create` | one-line title + multi-section body (Summary/Changes/Testing/Risk/Related) + reviewer suggestion | feature 分支 push 后, gh pr create 前手动派 |
+
+## 未来扩展
+
 - `release-notes`: 多 commit 聚合为 release notes
 - `dep-bumper`: 决策依赖包升级时机
 
