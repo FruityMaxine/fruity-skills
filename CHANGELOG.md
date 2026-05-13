@@ -3,6 +3,20 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.5.0.0] - 2026-05-13
+
+### Added (MINOR · 文档扩展)
+
+- **`plugin/skills/fruity-rules/SKILL.md` 扩展**: 从 2K 字节扩到完整红线详解 (10 条规则展开 + 红线优先级层级). 含 VERSION 4 段升号细则 / Co-Authored-By 整改流程 / 偷懒话术黑名单 / Playwright UI 实测脚本模板 / systemd 行尾注释陷阱演示 / 后端 bind 规则 / :28xxx UFW 联动 / token Cookie 三段守门 / 全中文规则 / 文言文 ACK 触发规则。
+- **`docs/examples/audit-report-pass.md`**: anti-slacking-auditor PASS 报告样板, 含完整 Step 0-5 + 12 维度评分表 + Coverage Map + Slacking Hits + Final Verdict 字段示例。
+- **`docs/examples/audit-report-fail.md`**: FAIL → BLOCKED 样板, 演示 (1) 第 1 次 audit critical FAIL 直接 BLOCKED, (2) 第 2 次 2-strike rule 让 major 维度自动升 critical, (3) 三档绕过对 critical 失效。
+- **README badges**: CI status / version / license / tests pass count 四个 shield.io / GitHub Actions badge。
+
+### Changed
+
+- README 版本号 0.2.0.0 → 0.5.0.0 (此前漏同步)
+
+
 ## [0.4.0.0] - 2026-05-13
 
 ### Added (MINOR · PreToolUse 红线拦截 + GitHub Actions CI)
