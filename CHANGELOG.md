@@ -3,6 +3,13 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.9.1.1] - 2026-05-13
+
+### Changed (BUILD · 收尾文档)
+
+- **README "启用 GitHub Actions CI" 节**: 文档化 `.github/workflows/test.yml` 一直在工作树但未推送的原因 (gh OAuth token 默认缺 `workflow` scope), 给出 `gh auth refresh -s workflow` + push 三步骤。
+
+
 ## [0.9.1.0] - 2026-05-13
 
 ### Added (PATCH · 第 6 个 sub-agent)

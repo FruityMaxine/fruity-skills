@@ -1,13 +1,13 @@
 # fruity-skills
 
 [![test](https://github.com/FruityMaxine/fruity-skills/actions/workflows/test.yml/badge.svg)](https://github.com/FruityMaxine/fruity-skills/actions/workflows/test.yml)
-[![version](https://img.shields.io/badge/version-0.9.1.0-blue)](https://github.com/FruityMaxine/fruity-skills/releases)
+[![version](https://img.shields.io/badge/version-0.9.1.1-blue)](https://github.com/FruityMaxine/fruity-skills/releases)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-41%20pass-brightgreen)](plugin/tests/run-tests.sh)
 
 FruityMaxine 的私人 Claude Code skill 全家桶,跨设备迁移时一站式安装。
 
-**当前版本**: v0.9.1.0
+**当前版本**: v0.9.1.1
 **作者**: FruityMaxine (donaldholmestte@gmail.com)
 
 ## 它是什么
@@ -91,6 +91,23 @@ fruity-skills/
 | 单独安装 | 可以独立装 | 不可独立装,随 fruity-skills 一起 |
 
 **别人不会装 fruity-skills。它专门为 FruityMaxine 个人定制,把他常用的所有 skill 打包到一个 plugin 里,跨设备一条命令装全。**
+
+## 启用 GitHub Actions CI
+
+`.github/workflows/test.yml` 文件存在于本地工作树但因 OAuth gh CLI 默认 token 缺 `workflow` scope, 未跟随 commit 推送到 GitHub。**需手动操作一次**:
+
+```bash
+# 1. 给 gh CLI 加 workflow scope
+gh auth refresh -s workflow
+
+# 2. push 含 workflow file 的 commit
+cd /path/to/fruity-skills
+git add .github/workflows/test.yml
+git commit -m "ci: enable GitHub Actions test workflow"
+git push origin main
+```
+
+之后 CI 在每次 push/PR 到 main 时自动跑 jq 校验 + bash -n + py_compile + 41 用例测试套件。
 
 ## 版本规则
 
