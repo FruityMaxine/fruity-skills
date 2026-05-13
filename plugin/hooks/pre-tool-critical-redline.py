@@ -52,6 +52,34 @@ def check_bash(cmd: str) -> str:
     if re.search(r"dd\s+.*of=/dev/sd", cmd):
         return f"dd to /dev/sd*: {cmd[:80]}. 会直写物理盘."
 
+    if re.search(r"curl\s+[^|]*\|\s*(sudo\s+)?bash", cmd) or \
+       re.search(r"wget\s+[^|]*\|\s*(sudo\s+)?bash", cmd):
+        return (f"curl|bash / wget|bash 模式: {cmd[:100]}. "
+                "未经签名校验直接执行远程脚本是高风险供应链注入向量. "
+                "下载到本地审查后再执行.")
+
+    if re.search(r"\bufw\s+(disable|--force\s+reset|reset)\b", cmd):
+        return (f"ufw disable/reset: {cmd[:80]}. "
+                "会清空防火墙规则, 暴露所有内部端口到公网. 明确告知用户并征得确认.")
+
+    if re.search(r"\biptables\s+(-F\b|--flush)", cmd):
+        return (f"iptables -F (flush): {cmd[:80]}. "
+                "会清空所有防火墙规则。明确告知用户并征得确认.")
+
+    if re.search(r"\bchmod\s+(-R\s+)?(777|0?777)\s+(/|/etc|/var|/usr|/opt)\b", cmd):
+        return (f"chmod 777 系统目录: {cmd[:80]}. 会移除所有权限保护."
+                " 改用最小必要权限 (644/755/750 等).")
+
+    if re.search(r":\(\)\s*\{[^}]*:[\s|]*:[^}]*\}\s*;\s*:", cmd):
+        return f"fork bomb 模式: {cmd[:60]}. 会耗尽系统进程表."
+
+    if re.search(r"shutdown\s+(now|-h)|reboot\s*(now)?$|init\s+[06]\b", cmd):
+        return (f"系统重启/关机命令: {cmd[:60]}. 会中断所有服务. "
+                "用户明确请求时手动跑, hook 拦默认行为.")
+
+    if re.search(r"history\s+-c\b|>\s*~?/.bash_history\b", cmd):
+        return f"清 shell history: {cmd[:60]}. 看似掩盖痕迹, 不允许默认行为."
+
     return ""
 
 

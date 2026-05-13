@@ -3,6 +3,25 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.6.0.0] - 2026-05-13
+
+### Added (MINOR · PreToolUse 红线扩展 + 测试到 32 用例)
+
+- **PreToolUse 新增 6 类红线** (`pre-tool-critical-redline.py`):
+  - `curl|bash` / `wget|bash` 远程脚本管道执行 (供应链注入向量)
+  - `ufw disable` / `ufw reset` / `ufw --force reset` (防火墙清空)
+  - `iptables -F` / `iptables --flush` (防火墙规则全清)
+  - `chmod -R 777 /etc|/var|/usr|/opt|/` (系统目录权限消除)
+  - fork bomb 模式 `:(){:|:&};:`
+  - `shutdown` / `reboot` / `init 0|6` (系统重启)
+  - `history -c` / 清 `.bash_history` (痕迹清除)
+- **测试 23 → 32 用例**: 新增 6 条红线测试 + 2 条正常路径放行 + 1 条 sync 脚本 --check 模式
+
+### Note
+
+红线检测在 hook 拦截层, 用户明确请求时仍可用 stop_hook_active=true 路径或显式 prompt 表明意图绕过。
+
+
 ## [0.5.0.0] - 2026-05-13
 
 ### Added (MINOR · 文档扩展)
