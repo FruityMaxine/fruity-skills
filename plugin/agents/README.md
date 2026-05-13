@@ -102,10 +102,16 @@
 |---|---|---|---|
 | **pr-creator** | 生成 PR title + body 喂给 `gh pr create` | one-line title + multi-section body (Summary/Changes/Testing/Risk/Related) + reviewer suggestion | feature 分支 push 后, gh pr create 前手动派 |
 
+## 第 6 个: release-notes (v0.9.1.0)
+
+| Sub-agent | 职责 | 输出 | 何时触发 |
+|---|---|---|---|
+| **release-notes** | 聚合多 commit 为用户面 release notes (Highlights/Features/Fixes/Install/Breaking) | markdown 文本喂给 `gh release create --notes`; 链接 GitHub compare URL | git tag 前手动派 |
+
 ## 未来扩展
 
-- `release-notes`: 多 commit 聚合为 release notes
 - `dep-bumper`: 决策依赖包升级时机
+- `pr-reviewer`: 自动 review PR (区别于 anti-slacking-auditor 的 turn-level audit)
 
 每个新 agent 应:
 1. 加 `plugin/agents/<name>.md`

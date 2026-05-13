@@ -3,6 +3,14 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.9.1.0] - 2026-05-13
+
+### Added (PATCH · 第 6 个 sub-agent)
+
+- **`plugin/agents/release-notes.md`**: 读 `git log <prev-tag>..HEAD` + CHANGELOG, 输出用户面 release notes markdown (Highlights / Features / Fixes / Breaking / Install / Full Changelog 链接), 供 `gh release create --notes` 直接消费。与 changelog-writer 区别: 后者写 dev-facing CHANGELOG.md 段, 前者写 user-facing release notes (按"用户能感知的影响"分组, 跨多 commit 聚合)。
+- **`plugin/agents/README.md` 协作图**: 含 release-notes 条目, 未来扩展去掉已实现项保留 dep-bumper / pr-reviewer。
+
+
 ## [0.9.0.0] - 2026-05-13
 
 ### Added (MINOR · 第 5 个 sub-agent 完成 commit/PR 闭环)
