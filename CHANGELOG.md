@@ -3,6 +3,24 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.13.0.0] - 2026-05-13
+
+### Added (MINOR · 真正移植 claude-quotas, 解除依赖)
+
+- **`plugin/scripts/check-quota.sh`** (新): 移植自 `claude-quotas` v1.4.0 `src/lib.ts` 的核心逻辑, bash + curl + jq 实现。直接读 `~/.claude/.credentials.json` 的 OAuth token, 调 `https://api.anthropic.com/api/oauth/usage` API, 返回与 claude-quotas MCP 等价的 JSON。支持 `--json` / `--summary` / `--fivehour` / `--sevenday` / `--sevenday-opus` / `--sevenday-sonnet` / `--resets-in` 6 种输出模式。
+- **`quota-aware-loop` SKILL 改造**: "前置依赖 claude-quotas plugin" → "自带实现, 无外部依赖"。优先用 `bash plugin/scripts/check-quota.sh`, 备选 claude-quotas MCP (功能等价, 任选其一)。
+- **`post-tool-mark-dirty.sh` Bash 白名单扩展**: 加 `bash plugin/scripts/check-quota.sh` 和 `bash plugin/scripts/sync-better-memory.sh --check` 到只读白名单 — 这些查询脚本不再触发 audit。`curl/wget` 无 -o/-O/> 重定向也加入只读白名单。
+
+### Removed
+
+- **不再依赖 `claude-quotas` plugin**。可单独卸载 claude-quotas, fruity-skills 仍能完整工作。
+
+### Note
+
+- 与 claude-quotas 共存不冲突 (各做各的, Claude 自选)
+- 若公网或 OAuth token 异常, check-quota.sh 退出码 2/3/4 + JSON error 提示
+
+
 ## [0.12.0.1] - 2026-05-13
 
 ### Changed (BUILD · 简化 hook 单一职责)

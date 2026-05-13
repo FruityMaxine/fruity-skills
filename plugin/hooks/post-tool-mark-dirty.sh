@@ -48,7 +48,34 @@ if [[ "$TOOL" == "Bash" ]]; then
 
   case "$FIRST" in
     # 纯只读 / 查询类
-    ls|cat|head|tail|grep|egrep|fgrep|find|locate|wc|stat|du|df|free|ps|top|htop|ss|netstat|ip|route|arp|whoami|id|pwd|env|printenv|date|cal|uptime|uname|hostname|hostnamectl|echo|printf|file|which|whereis|type|man|info|history|jq|yq|tree|less|more|sort|uniq|cut|awk|column|expand|nl|tac|rev|basename|dirname|readlink|realpath|md5sum|sha1sum|sha256sum|sha512sum|b2sum|cksum|true|false|test|expr|seq|nproc|getconf|locale|ldd|nm|strings|hexdump|xxd|od|diff|cmp|comm|join|tput|reset|clear|sleep|timeout)
+    ls|cat|head|tail|grep|egrep|fgrep|find|locate|wc|stat|du|df|free|ps|top|htop|ss|netstat|ip|route|arp|whoami|id|pwd|env|printenv|date|cal|uptime|uname|hostname|hostnamectl|echo|printf|file|which|whereis|type|man|info|history|jq|yq|tree|less|more|sort|uniq|cut|awk|column|expand|nl|tac|rev|basename|dirname|readlink|realpath|md5sum|sha1sum|sha256sum|sha512sum|b2sum|cksum|true|false|test|expr|seq|nproc|getconf|locale|ldd|nm|strings|hexdump|xxd|od|diff|cmp|comm|join|tput|reset|clear|sleep|timeout|curl|wget|bash)
+      # bash 子命令进一步看 (脚本调用)
+      if [[ "$FIRST" == "bash" ]]; then
+        SCRIPT=$(echo "$CMD_TRIMMED" | awk '{print $2}')
+        # fruity-skills 自带只读脚本: check-quota.sh / sync-better-memory.sh --check
+        case "$SCRIPT" in
+          *check-quota.sh|*sync-better-memory.sh)
+            # 进一步看 sync 是否带 --check (无副作用)
+            if [[ "$SCRIPT" == *sync-better-memory.sh ]]; then
+              FLAG_ARG=$(echo "$CMD_TRIMMED" | awk '{print $3}')
+              if [[ "$FLAG_ARG" == "--check" ]]; then
+                exit 0
+              else
+                touch "$FLAG"; exit 0  # 真同步写文件
+              fi
+            fi
+            exit 0 ;;
+          *)
+            touch "$FLAG"; exit 0 ;;  # 其他 bash <script> 保守 dirty
+        esac
+      fi
+      # curl/wget 重定向到文件才 dirty
+      if [[ "$FIRST" == "curl" || "$FIRST" == "wget" ]]; then
+        if echo "$CMD_TRIMMED" | grep -qE '(\s-o\s|\s-O\b|\s--output\s|\s>\s|\s>>\s)'; then
+          touch "$FLAG"; exit 0
+        fi
+        exit 0
+      fi
       exit 0
       ;;
     systemctl)

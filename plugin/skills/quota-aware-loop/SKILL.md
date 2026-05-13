@@ -7,14 +7,11 @@ description: Use when running /loop dynamic mode, before any ScheduleWakeup, bef
 
 让 Claude 自己看自己的配额, 在 /loop / ScheduleWakeup / 长任务前主动节制。
 
-## 前置依赖
+## 自带实现 (v0.13.0.0 起)
 
-**必装**: `claude-quotas` plugin (提供 `mcp__plugin_claude-quotas_claude-quotas__check_quota` MCP tool)
+无需额外 plugin。fruity-skills 自带 `plugin/scripts/check-quota.sh` (移植自 claude-quotas v1.4.0 lib.ts), 直接调 Anthropic OAuth usage API。
 
-```bash
-claude plugin marketplace add https://github.com/FruityMaxine/claude-quotas.git
-claude plugin install claude-quotas@claude-quotas
-```
+> **可选**: 如已装 `claude-quotas` plugin, 也可用其 MCP tool `mcp__plugin_claude-quotas_claude-quotas__check_quota` (功能等价)。两者任选其一。
 
 ## 触发场景 (按重要性排序)
 
@@ -29,11 +26,21 @@ claude plugin install claude-quotas@claude-quotas
 
 ## 调用方法
 
+**首选 (无依赖)**: 用 Bash 工具调
+```bash
+bash plugin/scripts/check-quota.sh --json       # 完整 JSON
+bash plugin/scripts/check-quota.sh --summary    # 人读
+bash plugin/scripts/check-quota.sh --resets-in  # 供 ScheduleWakeup 计算 (返回 fh_util/sd_util/resets_at)
+bash plugin/scripts/check-quota.sh --fivehour   # 单数字 (5h 使用率)
+bash plugin/scripts/check-quota.sh --sevenday   # 单数字 (7d 使用率)
+```
+
+**备选**: 若装了 claude-quotas plugin 也可调 MCP
 ```
 mcp__plugin_claude-quotas_claude-quotas__check_quota()
 ```
 
-返回 JSON:
+两者返回相同 JSON shape:
 ```json
 {
   "five_hour":   {"utilization": 88, "resets_at": "2026-05-13T08:50:00Z"},
