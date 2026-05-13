@@ -287,7 +287,48 @@ out=$(echo '{"tool_name":"Bash","tool_input":{"command":"gh release create v1.0"
 decision=$(echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("decision","none"))' 2>/dev/null)
 assert "PreTool 红线 gh release create 拦截" "block" "$decision"
 
-# Test 38: sync-better-memory.sh --check 模式
+# Test 38-46: v0.10.0.0 post-tool-mark-dirty Bash 白名单细分
+# 白名单只读 Bash 不应写 dirty
+for cmd in "ls -la" "cat /etc/hosts" "git status" "git log --oneline" "free -h" "ps aux" "grep foo bar.txt"; do
+  cleanup_flags
+  mock_input "\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$cmd\"}" | bash "$HOOKS/post-tool-mark-dirty.sh" 2>/dev/null
+  if [[ ! -f "/tmp/fruity-audit-${TEST_SID}.dirty" ]]; then
+    assert "Bash 只读 \"$cmd\" 不触发 dirty" "no-dirty" "no-dirty"
+  else
+    assert "Bash 只读 \"$cmd\" 不触发 dirty" "no-dirty" "wrote-dirty"
+  fi
+done
+
+# 写入 / 危险 Bash 应写 dirty
+for cmd in "rm -rf foo" "cp a b" "git commit -m x" "systemctl restart x" "docker run x" "ufw disable"; do
+  cleanup_flags
+  mock_input "\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"$cmd\"}" | bash "$HOOKS/post-tool-mark-dirty.sh" 2>/dev/null
+  if [[ -f "/tmp/fruity-audit-${TEST_SID}.dirty" ]]; then
+    assert "Bash 写入 \"$cmd\" 触发 dirty" "dirty" "dirty"
+  else
+    assert "Bash 写入 \"$cmd\" 触发 dirty" "dirty" "no-dirty"
+  fi
+done
+
+# 未知命令保守触发 dirty
+cleanup_flags
+mock_input '"tool_name":"Bash","tool_input":{"command":"some_unknown_tool --do-something"}' | bash "$HOOKS/post-tool-mark-dirty.sh" 2>/dev/null
+if [[ -f "/tmp/fruity-audit-${TEST_SID}.dirty" ]]; then
+  assert "Bash 未知命令保守触发 dirty" "dirty" "dirty"
+else
+  assert "Bash 未知命令保守触发 dirty" "dirty" "no-dirty"
+fi
+
+# Write/Edit 仍总是触发 dirty
+cleanup_flags
+mock_input '"tool_name":"Write","tool_input":{"file_path":"foo"}' | bash "$HOOKS/post-tool-mark-dirty.sh" 2>/dev/null
+if [[ -f "/tmp/fruity-audit-${TEST_SID}.dirty" ]]; then
+  assert "Write 仍总是触发 dirty (B 方案保留)" "dirty" "dirty"
+else
+  assert "Write 仍总是触发 dirty (B 方案保留)" "dirty" "no-dirty"
+fi
+
+# Test 47: sync-better-memory.sh --check 模式
 # 29: 当 SKILL.md 与公共仓一致时 exit 0
 SYNC=/srv/agent-workspace/projects/2026-05-13-fruity-skills/plugin/scripts/sync-better-memory.sh
 if [[ -f "$SYNC" ]]; then

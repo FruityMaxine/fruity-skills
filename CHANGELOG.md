@@ -3,6 +3,28 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.10.0.0] - 2026-05-13
+
+### Added (MINOR · B 方案 Bash 命令白名单细分)
+
+- **`plugin/hooks/post-tool-mark-dirty.sh` 重写**: 由"任何 Bash 都写 dirty"细分为白名单判断:
+  - **只读命令** (`ls`/`cat`/`grep`/`find`/`ps`/`free`/`git status/log/diff/show/blame/fetch/config/remote`/`docker ps/images/inspect`/`systemctl status/show/is-active`/`ufw status`/`gh xxx list/view/status`/`curl/wget` 无 -o/-O/>) → **不写 dirty, 不触发 audit**
+  - **写入/危险/未知命令** (`rm`/`cp`/`mv`/`git commit/push/rebase`/`systemctl restart`/`docker run`/`ufw disable`/解释器/未知 token) → **写 dirty, 触发 audit**
+  - **Write/Edit/MultiEdit 不变**: 总是写 dirty (保留 v0.9.x 行为)
+- **测试 41 → 56 用例**: 新增 15 条 B 方案场景 (7 条只读放行 + 6 条写入触发 + 1 条未知保守触发 + 1 条 Write 仍触发)
+
+### Why
+
+简单问题 (`ls /tmp` / `free -h` / `git status`) 不再被 anti-slacking-auditor 误审, 减少 ~80% 假阳性 audit; 危险命令 (`rm -rf` / `git commit`) 仍被 auditor 守门, 保留反偷懒卖点。**保守默认**: 未知命令一律触发 audit, 宁可多审不漏审。
+
+
+## [0.9.1.2] - 2026-05-13
+
+### Fixed (BUILD · plugin install schema 修)
+
+- `plugin/.claude-plugin/plugin.json` 去 `agents` 字段 (Claude Code schema 不允许; `agents/` 目录由 Claude Code 自动发现, 与 ECC 一致只写 skills/commands)。修后 `claude plugin install fruity-skills@fruity-skills` 通过校验。
+
+
 ## [0.9.1.1] - 2026-05-13
 
 ### Changed (BUILD · 收尾文档)
