@@ -2,39 +2,54 @@
 
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
+## [0.2.2.0] - 2026-05-13
+
+### Changed (MINOR · sub-agent 设计重做)
+
+经 **2 轮 × 3 视角 sub-agent harness-construction 评审** 重设计 `anti-slacking-auditor`:
+
+- **Bash 白名单** (文档硬约束): 仅允许 git diff/log/status/show/blame、jq、bash -n、python3 -m py_compile、wc、stat、find/head/tail/cat/ls。禁 rm/mv/cp/commit/push/systemctl/docker/gh 等带副作用命令。
+- **Step 0 历史读取**: auditor 启动必读 `/tmp/fruity-audit-history-<sid>.json` (PostToolUse hook 维护, auditor 不可写)。2-strike rule: 同 fail_dim 连续 2 次 → 升级 critical。
+- **Step 1 强制 git diff**: 必跑 `git log -20 + git diff --stat HEAD~1` 作前置事实采集, 不允许直接 Read 文件就下结论。
+- **双因子激活门**: 维度按 (file_types ∩ dim.file_patterns) OR (用户原话 ∩ dim.keywords) 激活, 未激活 → N/A 算 PASS。
+- **三级 severity**:
+  - 🔴 **Critical 红线** (硬循环不计 iter, 绕过无效): NO_CO_AUTHOR / NO_BIND_0000 / NO_SYSTEMD_INLINE_COMMENT / REPLY_FULL_CHINESE / NO_LEAKED_SECRETS
+  - 🟡 **Major** (1 次 FAIL = FAIL, 走 3-iter 上限): VERSION_BUMP / UI_PLAYWRIGHT_TESTED / UFW_FOR_NEW_PORT / TOKEN_COOKIE_GATING
+  - 🟢 **Minor** (累计 ≥2 才 FAIL, 单项 WARN): INDEX_MD_SYNC / COMMIT_TITLE_VERSION / DOC_CODE_SYNC
+- **3-iter 上限 + PASS_WITH_DEBT 降级**: 第 3 次仍 FAIL 且非 BLOCKED → 强制 PASS_WITH_DEBT 列剩余清单, 主 Claude 可结束 turn。BLOCKED (critical) 不计上限。
+- **verdict 格式带 iter**: `## Final Verdict: <PASS|PASS_WITH_DEBT|BLOCKED|FAIL> [iter N/3 或 N/∞]`
+
+### Added
+
+- **三档绕过机制** (仅对 major/minor, critical 无效):
+  - `FRUITY_NO_AUDIT=1` env var (整 session 关)
+  - 用户原话含 `[skip-audit]` / `别审了` / `跳过审核` / `不用审`
+  - `touch /tmp/fruity-audit-<sid>.skip` flag (单次, 用完删)
+- **`plugin/scripts/sync-better-memory.sh`**: 从公共仓拉最新 SKILL.md 同步内置副本; `--check` 模式仅检测漂移不写入
+- **`post-tool-mark-audited.sh` 升级**: 追加 tick 到 history.json (含 commit_head, fail_dims, verdict, iter); 仅 PASS/PASS_WITH_DEBT 写 .audited flag
+
+### Fixed
+
+- BLOCKED 状态在 Stop hook 永拦, 不受 .skip / env var 影响; 防止 critical 红线被绕过
+
 ## [0.2.1.0] - 2026-05-13
 
 ### Fixed (PATCH · 关键缺陷修复)
-- **Stop hook 从 grep 启发式改为 PostToolUse flag 结构化判断**: 经两轮 sub-agent 内部评审,
-  原 `tail -n 200 + grep "Write|Edit|Bash|anti-slacking-auditor"` 方案有两类静默错误:
-  (a) 命中"讨论这些工具时的文本"误判为有改动 / 已审 (false positive);
-  (b) 长 turn transcript 超 200 行被截断漏判 (false negative)。
-  反偷懒 auditor 是 plugin 核心保护机制, 在远程手机端场景用户不会逐条盯 audit 报告,
-  silent failure 不可接受。改用 `/tmp/fruity-audit-<session_id>.{dirty,audited}` flag 文件:
-  - PostToolUse(Write|Edit|MultiEdit|Bash) → 写 .dirty
-  - PostToolUse(Task) → 仅当 subagent_type=anti-slacking-auditor 且报告以
-    `## Final Verdict: PASS` 结尾时写 .audited
-  - Stop hook 读两个 flag 决定 block / 放行, 放行时清 flag
-- 新增 `plugin/hooks/post-tool-mark-dirty.sh` 和 `post-tool-mark-audited.sh`
 
-### Known followups
-- `sync-better-memory.sh` 尚未提供 — 公共版 better-memory 迭代时副本会漂移, 低频低风险, 留待 v0.2.2.0
+- Stop hook 从 `tail -n 200 + grep "Write|Edit|Bash"` 启发式改为 PostToolUse flag 结构化判断
+- 新增 `plugin/hooks/post-tool-mark-dirty.sh` 和 `post-tool-mark-audited.sh`
 
 ## [0.2.0.0] - 2026-05-13
 
 ### Added (MINOR · 新功能整合)
-- **整合 better-memory skill**: 把 https://github.com/FruityMaxine/better-memory 的 SKILL.md v1.3.0.2 整体并入 `plugin/skills/better-memory/`,作为 fruity-skills 全家桶的固定子集。
-- **anti-slacking-auditor 完全重写**: 保留 ECC `code-explorer` 的 5 步探索基因(Entry/Trace/Map/Pattern/Dependency),目标改为"探索 + 评分"; 输出固定结尾 `## Final Verdict: PASS/FAIL`; 主 Claude 必须改到 PASS 才能结束 turn。
-- **UserPromptSubmit hook 合并**: 单脚本同时注入 `[ACK]` 文言文词条(源自 better-memory v1.3.0.2)+ `[SkillMatch]` 首行 skill 扫描声明。
 
-### Changed
-- VERSION 0.1.0.0 → 0.2.0.0
+- 整合 better-memory v1.3.0.2 SKILL.md 作为内置 skill
+- anti-slacking-auditor v1 (基于 ECC code-explorer 5 步探索骨架)
+- UserPromptSubmit hook 合并 [ACK] + [SkillMatch]
 
 ## [0.1.0.0] - 2026-05-13
 
 ### Added
+
 - 项目骨架: marketplace.json + plugin.json + VERSION
-- `anti-slacking-auditor` sub-agent (基于 ECC `code-explorer` 模板初版)
-- `skill-match-announcer` UserPromptSubmit hook
-- `stop-anti-slacking` Stop hook (启发式版本, 已被 0.2.1.0 替换)
-- 示例 skill: `fruity-rules`
+- 初版 anti-slacking-auditor / hooks / 示例 skill fruity-rules

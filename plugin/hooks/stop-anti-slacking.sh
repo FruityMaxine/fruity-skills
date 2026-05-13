@@ -1,21 +1,7 @@
 #!/usr/bin/env bash
-# fruity-skills · Stop hook (v0.2.1.0 重写, 用 flag 文件替代 transcript grep)
-#
-# 与 PostToolUse hooks (mark-dirty / mark-audited) 配合:
-#   - 本 turn 跑过 Write|Edit|MultiEdit|Bash → /tmp/fruity-audit-<sid>.dirty 存在
-#   - anti-slacking-auditor PASS 返回   → /tmp/fruity-audit-<sid>.audited 存在
-#
-# 决策:
-#   1. stop_hook_active=True → 已 block 过一次, 防死循环放行
-#   2. 没 dirty → 本 turn 无改动, 放行
-#   3. 有 dirty 且有 audited → 已审过, 清两个 flag, 放行
-#   4. 有 dirty 但没 audited → block, 要求主 Claude 调用 anti-slacking-auditor
-#
-# 这种 flag 方案比 grep transcript 准确:
-#   - 工具调用必经 PostToolUse hook (结构化判断, 非文本匹配)
-#   - audited flag 只在 Final Verdict: PASS 时才写 (FAIL 不算审过)
-#   - 避免讨论"Write/Edit/Bash"文本被误判为"有改动"
-#   - 避免长 turn transcript 超 200 行被截断漏判
+# fruity-skills · Stop hook (v0.2.2.0)
+# 绕过机制 (仅对非 BLOCKED 生效):
+#   FRUITY_NO_AUDIT=1 env var / 用户原话含 [skip-audit]/别审了/跳过审核 / /tmp/fruity-audit-<sid>.skip flag
 
 set -euo pipefail
 
@@ -27,8 +13,7 @@ try:
 except: print("False")' 2>/dev/null || echo "False")
 
 if [[ "$STOP_HOOK_ACTIVE" == "True" ]]; then
-  echo '{}'
-  exit 0
+  echo '{}'; exit 0
 fi
 
 SESSION_ID=$(printf '%s' "$INPUT" | python3 -c 'import json,sys
@@ -37,31 +22,107 @@ try:
 except: print("")' 2>/dev/null || echo "")
 
 if [[ -z "$SESSION_ID" ]]; then
-  # 拿不到 session_id, 放行避免误杀
-  echo '{}'
-  exit 0
+  echo '{}'; exit 0
 fi
 
 DIRTY="/tmp/fruity-audit-${SESSION_ID}.dirty"
 AUDITED="/tmp/fruity-audit-${SESSION_ID}.audited"
+SKIP_FLAG="/tmp/fruity-audit-${SESSION_ID}.skip"
+HISTORY="/tmp/fruity-audit-history-${SESSION_ID}.json"
+
+# 检 critical BLOCKED — 绕过对其无效
+HAS_BLOCKED=$(python3 - <<PY 2>/dev/null || echo "false"
+import json,os
+h="$HISTORY"
+if not os.path.exists(h):
+    print("false"); raise SystemExit
+try:
+    d=json.loads(open(h).read())
+    ticks=d.get("ticks",[])
+    if ticks and ticks[-1].get("verdict")=="BLOCKED":
+        print("true")
+    else:
+        print("false")
+except Exception:
+    print("false")
+PY
+)
+
+if [[ "$HAS_BLOCKED" == "true" ]]; then
+  cat <<'EOF'
+{
+  "decision": "block",
+  "reason": "[强制·fruity-skills CRITICAL 红线未解决] 最近一次 audit 返回 BLOCKED (critical 维度 FAIL)。\n\n红线不计 iter 上限,绕过机制 (FRUITY_NO_AUDIT / [skip-audit] / .skip flag) 对 critical 全部失效。\n\n你必须: 读 /tmp/fruity-audit-history-<session>.json 看 Critical Blocks: 列表 → 逐项修复 → 再派 anti-slacking-auditor 复审 → 直到 verdict != BLOCKED 才能结束 turn"
+}
+EOF
+  exit 0
+fi
 
 if [[ ! -f "$DIRTY" ]]; then
-  # 本 turn 无代码改动, 放行
-  echo '{}'
+  echo '{}'; exit 0
+fi
+
+# 绕过 1: env var
+if [[ "${FRUITY_NO_AUDIT:-}" == "1" ]]; then
+  rm -f "$DIRTY" "$AUDITED" "$SKIP_FLAG"
+  echo '{"hookSpecificOutput":{"hookEventName":"Stop","additionalContext":"[fruity-skills] Audit bypassed via FRUITY_NO_AUDIT=1."}}'
+  exit 0
+fi
+
+# 绕过 2: skip flag
+if [[ -f "$SKIP_FLAG" ]]; then
+  rm -f "$DIRTY" "$AUDITED" "$SKIP_FLAG"
+  echo '{"hookSpecificOutput":{"hookEventName":"Stop","additionalContext":"[fruity-skills] Audit bypassed via .skip flag."}}'
+  exit 0
+fi
+
+# 绕过 3: 用户原话关键词
+TRANSCRIPT_PATH=$(printf '%s' "$INPUT" | python3 -c 'import json,sys
+try:
+    d=json.load(sys.stdin); print(d.get("transcript_path",""))
+except: print("")' 2>/dev/null || echo "")
+
+SKIP_BY_KEYWORD=false
+if [[ -n "$TRANSCRIPT_PATH" ]] && [[ -f "$TRANSCRIPT_PATH" ]]; then
+  LAST_USER=$(python3 - "$TRANSCRIPT_PATH" <<'PY' 2>/dev/null || echo ""
+import json,sys
+last=""
+try:
+    for line in open(sys.argv[1]):
+        try: d=json.loads(line)
+        except: continue
+        if d.get("type")=="user" or d.get("role")=="user":
+            c=d.get("message",{}).get("content","")
+            if isinstance(c,str): last=c
+            elif isinstance(c,list):
+                last="\n".join([p.get("text","") for p in c if isinstance(p,dict)])
+    print(last[-500:])
+except Exception: print("")
+PY
+)
+  if [[ -n "$LAST_USER" ]]; then
+    if printf '%s' "$LAST_USER" | grep -qE '\[skip-audit\]|别审了|算了别审|不用审|跳过审核' ; then
+      SKIP_BY_KEYWORD=true
+    fi
+  fi
+fi
+
+if [[ "$SKIP_BY_KEYWORD" == "true" ]]; then
+  rm -f "$DIRTY" "$AUDITED"
+  echo '{"hookSpecificOutput":{"hookEventName":"Stop","additionalContext":"[fruity-skills] Audit bypassed by user keyword."}}'
   exit 0
 fi
 
 if [[ -f "$AUDITED" ]]; then
-  # 已审过, 清两个 flag (本 turn 结束), 放行
+  VERDICT=$(cat "$AUDITED" 2>/dev/null || echo "PASS")
   rm -f "$DIRTY" "$AUDITED"
-  echo '{}'
+  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"Stop\",\"additionalContext\":\"[fruity-skills] Audit verdict: ${VERDICT}.\"}}"
   exit 0
 fi
 
-# dirty 但未审 → block
 cat <<'EOF'
 {
   "decision": "block",
-  "reason": "[强制·fruity-skills 反偷懒守门] 本 turn 涉及代码/命令改动 (PostToolUse 已记录 dirty flag), 但尚未经 anti-slacking-auditor 审核通过, 不能结束。\n\n现在你必须:\n1. 用 Agent 工具调用 subagent_type=\"anti-slacking-auditor\"\n2. prompt 中提供: (a) 用户本次原话 (b) 你声称做了什么 (c) 实际改了哪些文件 (用 git diff --stat 列)\n3. 等待 auditor 返回, 检查报告结尾必须是 `## Final Verdict: PASS` 或 `FAIL`\n4. FAIL → 按 auditor 清单立即修补, 修完再次调用 auditor 复审, 直到 PASS\n5. PASS → auditor 返回时 PostToolUse hook 自动写 audited flag, 你可以结束 turn\n\n跳过 sub-agent 不允许。fruity-skills v0.2.1.0 用 PostToolUse flag 结构化判断, 不再依赖 transcript grep, 误判率 ~0。"
+  "reason": "[强制·fruity-skills 反偷懒守门] 本 turn 涉及代码/命令改动 (PostToolUse 已记录 dirty flag), 但尚未经 anti-slacking-auditor 审核通过, 不能结束。\n\n你必须:\n1. 用 Agent 工具调用 subagent_type=\"anti-slacking-auditor\"\n2. prompt 中提供: (a) 用户本次原话 (b) 你声称做了什么 (c) git diff --stat HEAD~1 输出\n3. 报告结尾必须是 `## Final Verdict: <PASS|PASS_WITH_DEBT|BLOCKED|FAIL> [iter N/3]`\n4. PASS / PASS_WITH_DEBT → audited flag 自动写, 可结束\n5. FAIL → 按清单改再派 (iter +1)\n6. BLOCKED (critical 红线) → 不计 iter 上限, 改到非 BLOCKED\n\n绕过 (非 BLOCKED 才有效): FRUITY_NO_AUDIT=1 / 用户说 `[skip-audit]`/`别审了`/`跳过审核` / `touch /tmp/fruity-audit-${SESSION}.skip`。"
 }
 EOF

@@ -1,7 +1,7 @@
 {
   "name": "fruity-skills",
-  "version": "0.2.1.0",
-  "description": "个人版 skill 全家桶: 整合 better-memory + [ACK]+[SkillMatch] 双行强制声明 hook + 反偷懒探索式审核 sub-agent (沿用 ECC code-explorer 5 步探索基因,目标改为 PASS/FAIL 评分,主 Claude 必须改到 PASS 才能结束 turn)",
+  "version": "0.2.2.0",
+  "description": "经 2 轮多 agent 评审重设计 anti-slacking-auditor: 5 步探索 + 双因子激活门 + critical 红线不可绕过 (Co-Authored-By/bind 0.0.0.0/systemd 行尾注释/非中文/secrets) + major/minor 走 3-iter PASS_WITH_DEBT 降级 + 2-strike 升级 + history.json 跨调用状态 + 三档绕过 (env/keyword/flag) + Bash 只读白名单",
   "author": {
     "name": "FruityMaxine",
     "email": "donaldholmestte@gmail.com"
