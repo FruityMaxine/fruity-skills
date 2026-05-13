@@ -2,6 +2,19 @@
 
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
+
+## [0.3.0.0] - 2026-05-13
+
+### Added (MINOR · 测试套件 + LICENSE)
+
+- **`plugin/tests/run-tests.sh`**: 端到端 hook 测试套件 (15 用例): skill-match-announcer 注入校验 / post-tool-mark-dirty 写 .dirty / post-tool-mark-audited PASS/FAIL/其他 sub-agent 三路径 / Stop hook 无 dirty/有 dirty 无 audited/有 dirty 有 audited 三路径 / BLOCKED 永拦 / 三档绕过 (env var/skip flag/keyword) / stop_hook_active 死循环防护
+- **`LICENSE`** (MIT): README 已声明但缺文件 (doc/file drift), GitHub 现可自动识别 license badge
+- **`plugin/hooks/post-tool-mark-audited.py`**: 把 Python 逻辑拆到独立文件; .sh 改一行 wrapper
+
+### Fixed (Critical silent bug)
+
+- **post-tool-mark-audited hook 之前在所有机器都默默失败**: 原 `python3 - <<PY ... raw='''$INPUT''' ... PY` 写法的 heredoc 把脚本本体作为 stdin 给 python, 同时 shell 把 `$INPUT` 展开到 python 三引号中 — 多行 JSON 触发 `raw=` 提前闭合, json.loads 解析失败被 except 静默吞掉, **整个 hook 退出 0 但什么都没写**。表现: anti-slacking-auditor 即便 PASS 也不会写 .audited flag, 主 Claude 永远卡在 Stop block。本版用独立 .py 文件 + cat 管道传 stdin 修复。测试 12→15 通过证明修复有效。
+
 ## [0.2.2.0] - 2026-05-13
 
 ### Changed (MINOR · sub-agent 设计重做)
