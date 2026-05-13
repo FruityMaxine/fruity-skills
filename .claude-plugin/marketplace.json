@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "FruityMaxine 个人 Claude Code skill 全家桶 — 整合 better-memory 跨会话记忆 + skill 显式匹配 hook + anti-slacking-auditor 探索式审核 sub-agent (基于 ECC code-explorer 改造,不通过不能停)",
-    "version": "0.2.0.0"
+    "version": "0.2.1.0"
   },
   "plugins": [
     {
       "name": "fruity-skills",
       "source": "./plugin",
       "description": "个人版 skill 全家桶: 整合 better-memory (公共版的本地副本) + [ACK]+[SkillMatch] 双行强制声明 hook + 反偷懒探索式审核 sub-agent (沿用 ECC code-explorer 5 步探索基因,目标改为 PASS/FAIL 评分,主 Claude 必须改到 PASS 才能结束 turn)",
-      "version": "0.2.0.0",
+      "version": "0.2.1.0",
       "author": {
         "name": "FruityMaxine",
         "email": "donaldholmestte@gmail.com"

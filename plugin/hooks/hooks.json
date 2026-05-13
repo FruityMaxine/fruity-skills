@@ -10,8 +10,34 @@
             "timeout": 5
           }
         ],
-        "description": "Inject reminder: reply must start with [SkillMatch] line declaring skill scan result",
+        "description": "Inject [ACK] + [SkillMatch] mandatory header for every reply",
         "id": "fruity:user-prompt:skill-match-announcer"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-mark-dirty.sh\"",
+            "timeout": 3
+          }
+        ],
+        "description": "Mark session as dirty (has code/command change) on any Write/Edit/Bash",
+        "id": "fruity:post-tool:mark-dirty"
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-mark-audited.sh\"",
+            "timeout": 5
+          }
+        ],
+        "description": "Detect anti-slacking-auditor PASS verdict and mark session as audited",
+        "id": "fruity:post-tool:mark-audited"
       }
     ],
     "Stop": [
@@ -23,7 +49,7 @@
             "timeout": 10
           }
         ],
-        "description": "Block stop until anti-slacking-auditor sub-agent has reviewed and approved the turn",
+        "description": "Block stop until dirty session is audited PASS (uses flag files, no grep)",
         "id": "fruity:stop:anti-slacking"
       }
     ]
