@@ -3,6 +3,14 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.12.0.1] - 2026-05-13
+
+### Changed (BUILD · 简化 hook 单一职责)
+
+- `skill-match-announcer.sh` 回滚到 v0.11 静态注入版本, 去除关键词触发的 quota-aware 条件注入逻辑。理由: 保持 hook 单一职责 (仅注入 [ACK]+[SkillMatch]); quota 感知交由 `quota-aware-loop` skill 文档让 Claude 自主判断, 不在多处分散逻辑。
+- `quota-aware-loop` skill **保留** (核心整合方式)。
+
+
 ## [0.12.0.0] - 2026-05-13
 
 ### Added (MINOR · 配额感知 + 整合 claude-quotas)
