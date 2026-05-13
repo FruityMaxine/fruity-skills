@@ -3,6 +3,53 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.11.0.0] - 2026-05-13
+
+### Added (MINOR · 评分体系 + 任务覆盖度 + bug 检测 + 逻辑链路审查)
+
+`anti-slacking-auditor` 大改, 从 12 维度二元判定 → **15 维度百分制 + 5 档等级**。任何修改都严查 (不分阶段严苛度), 用户开发过程中持续把关。
+
+**新增 3 维度**:
+- 🔴 **`INTENT_COVERAGE_COMPLETE`** (critical, 8.5 分): 用户原话拆原子需求, 逐项核对兑现。缺一即 FAIL → BLOCKED。
+- 🔴 **`NO_KNOWN_BUGS`** (critical, 8.5 分): bash -n / py_compile / jq / yaml + 空实现 / 偷懒话术 / 明显逻辑错探测。命中即 BLOCKED。
+- 🟡 **`LOGIC_CHAIN_INTEGRITY`** (major, 5 分): 显式节点之间的隐含必需节点 (鉴权/重试/超时/离线/错误反馈/边界) 是否考虑。主 Claude 可明示"已知不做"豁免。
+
+**Step 2 Intent Decomposition (新 step)**:
+- A. 用户原话逐字拆显式原子需求 (编号)
+- B. 推导隐含必需节点 (鉴权/重试/通信协议/断网恢复等)
+- C. 输出 Intent 表供 Step 3 Coverage Map 逐项核对
+
+**百分制 + 5 档等级**:
+
+| 严重 | 维度数 | 单 dim 分 | 小计 |
+|---|---|---|---|
+| 🔴 critical | 7 | 8.5 | 59.5 |
+| 🟡 major | 5 | 5 | 25 |
+| 🟢 minor | 3 | 5 | 15 |
+| **合计** | **15** | | **~100** |
+
+| Status | 触发条件 | Stop hook 行为 |
+|---|---|---|
+| **PASS** | total ≥ 90 且 critical 全满 | 放行 |
+| **PASS_WITH_DEBT** | 75-89 且 critical 全满 (第 3 iter 强制降级) | 放行 + warn |
+| **WARN** ⭐新 | 60-74, 或 major 任一 FAIL 但 critical 全满 | 软警告, 仍 block 但弱 |
+| **FAIL** | < 60 | 强制重审 (iter+1) |
+| **BLOCKED** | critical 任一 < 8.5 | 永拦, 不计 iter 上限 |
+
+**verdict 新格式**: `## Final Verdict: <status> [<score>/100 · iter N/<3|∞>]` (兼容旧格式无 score)
+
+### Changed
+
+- `plugin/hooks/post-tool-mark-audited.py` regex 兼容新 score 格式 + 新 WARN status; history.json 加 `score` 字段
+- Step 5 编号下移 (Step 2 Intent / Step 3 Coverage / Step 4 Bug / Step 5 CLAUDE.md / Step 6 评分)
+- "无简单/严格场景区分"明文写入 prompt — 用户开发过程中任何修改都严查
+- `2-strike rule` 保留
+
+### Note
+
+- 已知不做的隐含节点: 主 Claude 在 Coverage Map 标注"explicit-skip: <reason>"豁免 `LOGIC_CHAIN_INTEGRITY` 扣分
+
+
 ## [0.10.0.0] - 2026-05-13
 
 ### Added (MINOR · B 方案 Bash 命令白名单细分)

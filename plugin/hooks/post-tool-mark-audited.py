@@ -44,16 +44,36 @@ def main() -> int:
     else:
         text = str(tresp)
 
+    # v0.11.0.0: 新格式含 score, 例 "## Final Verdict: PASS [95/100 · iter 1/3]"
+    # 兼容旧格式 "## Final Verdict: PASS [iter 1/3]"
     mv = re.search(
-        r"##\s*Final Verdict:\s*(PASS_WITH_DEBT|PASS|BLOCKED|FAIL)"
-        r"\s*(?:\[iter\s*(\d+)/(?:3|\u221e|∞)\])?",
+        r"##\s*Final Verdict:\s*(PASS_WITH_DEBT|PASS|WARN|BLOCKED|FAIL)"
+        r"\s*\[(?:(\d+)/100\s*[·:]?\s*)?(?:iter\s*(\d+)/(?:3|\u221e|∞))?\]",
         text,
         re.IGNORECASE,
     )
     if not mv:
-        return 0
-    verdict = mv.group(1).upper()
-    iter_n = int(mv.group(2)) if mv.group(2) else 1
+        # 旧格式 fallback (无 brackets)
+        mv = re.search(
+            r"##\s*Final Verdict:\s*(PASS_WITH_DEBT|PASS|WARN|BLOCKED|FAIL)",
+            text,
+            re.IGNORECASE,
+        )
+        if not mv:
+            return 0
+        verdict = mv.group(1).upper()
+        score = -1
+        iter_n = 1
+    else:
+        verdict = mv.group(1).upper()
+        score = int(mv.group(2)) if mv.group(2) else -1
+        iter_n = int(mv.group(3)) if mv.group(3) else 1
+
+    # 单独的 Score 行 fallback
+    if score < 0:
+        ms = re.search(r"##\s*Score:\s*(\d+)/100", text)
+        if ms:
+            score = int(ms.group(1))
 
     mf = re.search(r"##\s*Fail Dimensions:\s*\[(.*?)\]", text)
     fail_dims = []
@@ -88,6 +108,7 @@ def main() -> int:
         "fail_dims": fail_dims,
         "verdict": verdict,
         "iter_reported": iter_n,
+        "score": score,
     })
     try:
         with open(hist_path, "w") as f:
