@@ -12,6 +12,17 @@
         ],
         "description": "Inject [ACK] + [SkillMatch] mandatory header for every reply",
         "id": "fruity:user-prompt:skill-match-announcer"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-mark-turn.sh\"",
+            "timeout": 3
+          }
+        ],
+        "description": "Write turn_start epoch to /tmp/fruity-audit-<sid>.turn_start so Stop hook can filter stale dirty flags from previous turns (subagent async leak fix)",
+        "id": "fruity:user-prompt:mark-turn"
       }
     ],
     "PreToolUse": [

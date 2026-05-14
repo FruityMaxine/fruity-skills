@@ -3,6 +3,28 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.14.0.0] - 2026-05-14
+
+### Added (MINOR · 跨 turn dirty 残留 fix — 新 hook + Stop 滤条)
+
+- **`plugin/hooks/user-prompt-mark-turn.sh`** (新): UserPromptSubmit hook，每条用户提交时写当前 epoch 到 `/tmp/fruity-audit-<sid>.turn_start`，标记本 turn 起始时刻。
+- **`plugin/hooks/stop-anti-slacking.sh`** 增 stale-dirty 滤条: dirty 存在性检查后立即比较 `dirty.mtime` 与 `turn_start.mtime`，若 dirty 早于 turn_start → 视为前 turn 异步残留（subagent Bash 落盘竞争留下的孤儿）→ 自动清理 + 放行，不再误 block 下一 turn 的纯只读操作。
+- **`plugin/hooks/hooks.json`** 注册新 UserPromptSubmit handler `fruity:user-prompt:mark-turn`，与既有 `skill-match-announcer` 并存。
+
+### Why
+
+旧版 bug: anti-slacking-auditor (subagent) 内部 Bash 调用走 PostToolUse → mark-dirty.sh，subagent 跑过的解释器命令仍写 dirty。这些写入与父 Stop hook 的清理存在竞争，dirty 落盘可能晚于 Stop 清理 → 留下孤儿 dirty → 下一 turn 即便只跑只读 `date` / `find` 也被强制要求 audit。
+
+修复思路: 用 turn_start 时间锚 + mtime 比较，把"前 turn 异步残留"与"本 turn 真实改动"在 Stop 层区分。无 turn_start 文件时回退原行为（保守安全）。
+
+### Tested
+
+3 测试 case 全 pass:
+1. 旧 dirty (mtime < turn_start) → 自动清理 + pass
+2. 新 dirty (mtime > turn_start) → 仍 block，要求 audit
+3. 无 turn_start (首 turn / 升级前 session) → 回退原行为 block
+
+
 ## [0.13.0.0] - 2026-05-13
 
 ### Added (MINOR · 真正移植 claude-quotas, 解除依赖)

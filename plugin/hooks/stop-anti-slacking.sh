@@ -29,6 +29,7 @@ DIRTY="/tmp/fruity-audit-${SESSION_ID}.dirty"
 AUDITED="/tmp/fruity-audit-${SESSION_ID}.audited"
 SKIP_FLAG="/tmp/fruity-audit-${SESSION_ID}.skip"
 HISTORY="/tmp/fruity-audit-history-${SESSION_ID}.json"
+TURN_START="/tmp/fruity-audit-${SESSION_ID}.turn_start"
 
 # 检 critical BLOCKED — 绕过对其无效
 HAS_BLOCKED=$(python3 - <<PY 2>/dev/null || echo "false"
@@ -60,6 +61,18 @@ fi
 
 if [[ ! -f "$DIRTY" ]]; then
   echo '{}'; exit 0
+fi
+
+# Stale-dirty filter (v0.14.0.0): 清理前 turn 残留 dirty (subagent 异步落盘 leak)
+# 若 dirty.mtime < turn_start → 视为前 turn 孤儿,自动清理放行
+if [[ -f "$TURN_START" ]]; then
+  TURN_START_TS=$(cat "$TURN_START" 2>/dev/null || echo 0)
+  DIRTY_TS=$(stat -c %Y "$DIRTY" 2>/dev/null || echo 0)
+  if (( DIRTY_TS < TURN_START_TS )); then
+    rm -f "$DIRTY"
+    echo '{"hookSpecificOutput":{"hookEventName":"Stop","additionalContext":"[fruity-skills] Cleaned stale dirty flag from prior turn (mtime older than turn_start)."}}'
+    exit 0
+  fi
 fi
 
 # 绕过 1: env var
