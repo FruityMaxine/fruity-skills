@@ -122,6 +122,19 @@ def main() -> int:
                 f.write(verdict)
         except Exception:
             pass
+        # 记当时 HEAD 全 SHA，供 stop hook 下次算 diff range（修多 commit 漏审 bug）
+        try:
+            head_full = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"],
+                cwd=d.get("cwd", "."),
+                stderr=subprocess.DEVNULL,
+                text=True,
+            ).strip()
+            if head_full:
+                with open(f"/tmp/fruity-audit-{session}.last_audited_commit", "w") as f:
+                    f.write(head_full)
+        except Exception:
+            pass
 
     return 0
 

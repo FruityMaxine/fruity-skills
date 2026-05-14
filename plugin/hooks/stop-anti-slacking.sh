@@ -133,9 +133,30 @@ if [[ -f "$AUDITED" ]]; then
   exit 0
 fi
 
-cat <<'EOF'
+# 算本次 audit 之 diff range — 若上次 audited 标记之 commit 仍在 git 树内,
+# 则覆盖自该 commit 至 HEAD 之全部未审 commit；否则 fallback HEAD~1。
+# 解决主 Claude 一轮内打多个 commit 而 auditor 默认仅看 HEAD~1 之漏审 bug。
+CWD=$(printf '%s' "$INPUT" | python3 -c 'import json,sys
+try:
+    d=json.load(sys.stdin); print(d.get("cwd",""))
+except: print("")' 2>/dev/null || echo "")
+
+LAST_AUDITED_COMMIT_FILE="/tmp/fruity-audit-${SESSION_ID}.last_audited_commit"
+DIFF_RANGE="HEAD~1"
+if [[ -f "$LAST_AUDITED_COMMIT_FILE" ]] && [[ -n "$CWD" ]] && [[ -d "$CWD" ]]; then
+  LAST_SHA=$(head -c 40 "$LAST_AUDITED_COMMIT_FILE" 2>/dev/null || echo "")
+  if [[ -n "$LAST_SHA" ]] && (cd "$CWD" && git rev-parse --verify "$LAST_SHA" >/dev/null 2>&1); then
+    CURRENT_HEAD=$(cd "$CWD" && git rev-parse HEAD 2>/dev/null || echo "")
+    if [[ -n "$CURRENT_HEAD" ]] && [[ "$CURRENT_HEAD" != "$LAST_SHA" ]]; then
+      DIFF_RANGE="${LAST_SHA}..HEAD"
+    fi
+  fi
+fi
+
+# 注意: unquoted heredoc 会插值 — ${DIFF_RANGE} 实际替换, \${SESSION} 字面保留
+cat <<EOF
 {
   "decision": "block",
-  "reason": "[强制·fruity-skills 反偷懒守门] 本 turn 涉及代码/命令改动 (PostToolUse 已记录 dirty flag), 但尚未经 anti-slacking-auditor 审核通过, 不能结束。\n\n你必须:\n1. 用 Agent 工具调用 subagent_type=\"anti-slacking-auditor\"\n2. prompt 中提供: (a) 用户本次原话 (b) 你声称做了什么 (c) git diff --stat HEAD~1 输出\n3. 报告结尾必须是 `## Final Verdict: <PASS|PASS_WITH_DEBT|BLOCKED|FAIL> [iter N/3]`\n4. PASS / PASS_WITH_DEBT → audited flag 自动写, 可结束\n5. FAIL → 按清单改再派 (iter +1)\n6. BLOCKED (critical 红线) → 不计 iter 上限, 改到非 BLOCKED\n\n绕过 (非 BLOCKED 才有效): FRUITY_NO_AUDIT=1 / 用户说 `[skip-audit]`/`别审了`/`跳过审核` / `touch /tmp/fruity-audit-${SESSION}.skip`。"
+  "reason": "[强制·fruity-skills 反偷懒守门] 本 turn 涉及代码/命令改动 (PostToolUse 已记录 dirty flag), 但尚未经 anti-slacking-auditor 审核通过, 不能结束。\\n\\n你必须:\\n1. 用 Agent 工具调用 subagent_type=\"anti-slacking-auditor\"\\n2. prompt 中提供: (a) 用户本次原话 (b) 你声称做了什么 (c) \`git diff --stat ${DIFF_RANGE}\` 输出 (range 覆盖自上次 audited 通过以来全部未审 commit)\\n3. 报告结尾必须是 \`## Final Verdict: <PASS|PASS_WITH_DEBT|BLOCKED|FAIL> [iter N/3]\`\\n4. PASS / PASS_WITH_DEBT → audited flag 自动写, 可结束\\n5. FAIL → 按清单改再派 (iter +1)\\n6. BLOCKED (critical 红线) → 不计 iter 上限, 改到非 BLOCKED\\n\\n绕过 (非 BLOCKED 才有效): FRUITY_NO_AUDIT=1 / 用户说 \`[skip-audit]\`/\`别审了\`/\`跳过审核\` / \`touch /tmp/fruity-audit-\${SESSION}.skip\`。"
 }
 EOF
