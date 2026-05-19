@@ -1,7 +1,7 @@
 {
   "name": "fruity-skills",
-  "version": "0.15.0.0",
-  "description": "经 2 轮多 agent 评审重设计 anti-slacking-auditor: 5 步探索 + 双因子激活门 + critical 红线不可绕过 (Co-Authored-By/bind 0.0.0.0/systemd 行尾注释/非中文/secrets) + major/minor 走 3-iter PASS_WITH_DEBT 降级 + 2-strike 升级 + history.json 跨调用状态 + 三档绕过 (env/keyword/flag) + Bash 只读白名单",
+  "version": "0.16.0.0",
+  "description": "新增 betterloop-auditor subagent 配合 /betterloop slash command 工作流 — Tick 1 计划组强制审查，按内置 6 问决策流（合格 5 模式 + 量化护栏 + 反例清单）判每个候选 tick PASS/WEAK，主 Opus 不再需复述审查标准。model=sonnet 节 quota，只读工具集无写入权限。",
   "author": {
     "name": "FruityMaxine",
     "email": "donaldholmestte@gmail.com"

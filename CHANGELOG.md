@@ -3,6 +3,50 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.16.0.0] - 2026-05-19
+
+### Added (MINOR · 新增 betterloop-auditor subagent 配合 /betterloop 工作流)
+
+- **`plugin/agents/betterloop-auditor.md`** (新): /betterloop slash command 计划组（Tick 1）专用工作量审查 subagent。每个 5+1+4 分组开头，主 Opus 4.7 规划完本组 4 个候选 tick 后**强制** dispatch 调用，按内置 6 问决策流逐项判 PASS/WEAK。
+- 审查标准完整内嵌 subagent system prompt：
+  - **§2.2 合格 5 模式**（A 新模块开发 / B 全新界面 / C 后端新交互 / D 跨层重构 / E 重大性能架构优化），每模式必备要素清单
+  - **§2.3 量化护栏 4 条**（≥150 行 / ≥3 文件 / ≥30 min / ≥2 layer）
+  - **§2.4 立即 WEAK 反例清单 12 类**（单 bug / 单组件替换 / 单文案 / 单样式 / 单变量重命名 / 单日志 / 单文档微改 / 单 import / 单测试 / 单 lint / 单依赖升级 / 单配置改）
+  - **6 问决策流 + 实际验证步骤 + 标准化输出报告格式**
+- `model=sonnet` 走 Sonnet 4.6 节 quota，避免主 Opus 反复复述长 prompt
+- 工具白名单：`Read / Grep / Glob / Bash`（Bash 仅只读：git diff/log/status/show + ls/find/cat/wc/jq 等，禁所有写命令）
+
+### Why
+
+之前 /betterloop slash command 把审查 prompt 写死在主 Opus 调用 `Agent(subagent_type="general-purpose", prompt="...大段标准文本...")` 里。问题：
+1. 主 Opus 每次启动 subagent 都需复述一遍标准 → 浪费主会话 token
+2. 主 Opus 可能不遵循指令、prompt 文本出现变体 → 审查标准漂移
+3. 审查标准更新需要同时改 slash command + 主 Opus 行为，维护成本高
+
+提取为独立 subagent 后：
+- 主 Opus 调用只需传**候选 tick 清单**（4 个），不传标准
+- 标准在 subagent 系统提示里写死，不可被变体
+- 标准升级只需改 subagent 一个文件
+
+### Companion Files (不在本 repo 内)
+
+- `~/.claude/commands/betterloop.md`（slash command 一键宏，调用本 subagent）— 由用户全局 commands 目录管理，独立于 plugin
+
+
+## [0.15.0.0] - 2026-05-14
+
+### Fixed (MINOR · 多 commit 漏审 bug — auditor 改为审"自上次 audited 以来"全部 commit)
+
+- **`plugin/hooks/stop-anti-slacking.sh`**: 之前 block reason 中硬编码 `git diff --stat HEAD~1`，主 Claude 一轮内打多个 commit 时 auditor 默认仅看最后一个，前面 commits 漏审。修：触发 block 前读 `/tmp/fruity-audit-<sid>.last_audited_commit` + `git rev-parse --verify` 验证 SHA 仍在树内 → 算 `DIFF_RANGE=<sha>..HEAD`；不存在或无效时 fallback `HEAD~1`。block reason 用 unquoted heredoc 插值 `${DIFF_RANGE}`，`${SESSION}` 字面量用 `\${SESSION}` 转义保留供绕过提示。
+- **`plugin/hooks/post-tool-mark-audited.py`**: verdict PASS/PASS_WITH_DEBT 时除写 `.audited` 标记，再记当时 HEAD 全 SHA 到 `last_audited_commit` 文件，供 stop hook 读取。
+
+### Tested
+
+- `bash -n` 通过
+- `python -m py_compile` 通过
+- 模拟脏 dirty + 假 SHA 的 dry-run: HEAD~1 fallback 正确触发，`${SESSION}` 字面量在 reason 内完整保留
+
+
 ## [0.14.0.0] - 2026-05-14
 
 ### Added (MINOR · 跨 turn dirty 残留 fix — 新 hook + Stop 滤条)
