@@ -3,6 +3,31 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.17.0.0] - 2026-05-21
+
+### Added (MINOR · /betterloop slash command 内置 + §10.4 自主停规则)
+
+- **`plugin/commands/betterloop.md`** (新): /betterloop 命令模板进 plugin (之前用户得自己手放到 `~/.claude/commands/`, 现在 plugin 装好即用).
+- **§10 退出协议加条件 D — 自主停止**: 之前只有用户明令 / 切项目 / quota 95% 三个退出路径, "原 prompt 提了完成条件" 的情况主 Opus 仍永不停息. 现在加条件 D:
+  - "持续到 X 都被检查过且完全合理 / 做完 N 件事就停 / 全部修完结束" 等**明示完成态** → 达到即自主停
+  - "永不停息 / 一直跑 / 持续迭代" 等**明示永续语义** → 仅 §10.1-3 退出, 绝不自主停
+  - 无明确边界 (反复审查 / 持续优化 / 改完为止) 等**模糊态** → 倾向继续, auditor 在 Tick 1 计划组顺便判 "已达暗示完成态" 才允许自主停
+- **新增 §10.4 详则**: 自主停判定 4 步模板 + 自主停退出动作 (落 loop-plan-组N-final.md + 简短结案报告 + 不调 ScheduleWakeup)
+- **新增 "启动期意图识别" 段**: /betterloop 启动时主 Opus 必须先读 ARGUMENTS 提取停止语义, 第一轮回复就告知用户 "侦测到明示停止 / 永续 / 模糊态" 让用户能及早纠正解读.
+- **`plugin.json`** 加 `"commands": ["./commands/"]` 让 plugin 系统挂载命令; keywords 加 `betterloop / autonomous-loop`.
+
+### Why
+
+之前 /betterloop slash command 在用户级 `~/.claude/commands/betterloop.md`, 装 plugin 不会自带, 用户得手动复制. plugin 应该把命令一起发. 同时之前 §10 "永不停息" 太绝对 — 用户在 ARGUMENTS 明示 "做完 X 就停" 时, 主 Opus 仍不能自主停, 必须用户重复明令 "停止", UX 差. §10.4 让主 Opus 有上下文感的退出权: prompt 含明示停止 → 自主停; 含明示永续 → 不停; 模糊态 → auditor 协助判.
+
+### How to use
+
+升级到 0.17.0.0 后:
+- `/betterloop <任务>` 直接可用 (无需放本地 commands)
+- 写 prompt 时如果想让 loop 自主结束, 加 "持续到 ... 完成" / "X 修完即停"; 想让永不停, 加 "永不停息" / "一直跑"
+- 模糊态 (e.g. "反复审查 X" 无明确停止) 时, loop 倾向永续, 但每组 auditor 判达成态会触发自主停 → 兜底退出
+
+
 ## [0.16.0.0] - 2026-05-19
 
 ### Added (MINOR · 新增 betterloop-auditor subagent 配合 /betterloop 工作流)
