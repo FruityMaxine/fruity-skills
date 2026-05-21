@@ -5,15 +5,15 @@
     "email": "donaldholmestte@gmail.com"
   },
   "metadata": {
-    "description": "FruityMaxine 个人 Claude Code skill 全家桶 · 经 2 轮 sub-agent harness-construction 评审重设计 anti-slacking-auditor: 双因子激活门 + 三级 severity (critical/major/minor) + 红线硬循环 + 3-iter 上限 + history.json 状态持久化 + 三档绕过 + Bash 只读白名单。整合 better-memory + sync 脚本",
-    "version": "0.14.0.0"
+    "description": "FruityMaxine 个人 Claude Code skill 全家桶 · v0.17 加 /betterloop slash command (5+1+4 节奏 + §10.4 自主停规则) + betterloop-auditor subagent + anti-slacking 红线审 + better-memory + quota-aware-loop + fruity-rules.",
+    "version": "0.17.0.0"
   },
   "plugins": [
     {
       "name": "fruity-skills",
       "source": "./plugin",
-      "description": "经 2 轮多 agent 评审重设计 anti-slacking-auditor: 5 步探索 + 双因子激活门 + critical 红线不可绕过 (Co-Authored-By/bind 0.0.0.0/systemd 行尾注释/非中文/secrets) + major/minor 走 3-iter PASS_WITH_DEBT 降级 + 2-strike 升级 + history.json 跨调用状态 + 三档绕过 (env/keyword/flag) + Bash 只读白名单",
-      "version": "0.14.0.0",
+      "description": "/betterloop slash command + §10.4 自主停 (明示完成态/永续/模糊态三档) + betterloop-auditor 6 问决策流强制审 + anti-slacking-auditor 双因子激活门 + 红线硬循环 + better-memory 跨会话持久 + quota-aware-loop + fruity-rules cross-device 规则",
+      "version": "0.17.0.0",
       "author": {
         "name": "FruityMaxine",
         "email": "donaldholmestte@gmail.com"
@@ -28,7 +28,9 @@
         "audit",
         "memory",
         "explore",
-        "better-memory"
+        "better-memory",
+        "betterloop",
+        "autonomous-loop"
       ],
       "category": "workflow",
       "tags": [
