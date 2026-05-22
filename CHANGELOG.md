@@ -3,6 +3,44 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.18.0.0] - 2026-05-22
+
+### Changed (MINOR · §10.4 重写 — 客观/主观停止条件五档分轨铁律)
+
+**触发事件**:2026-05-22 用户在 `/betterloop` 中明示「永不停歇直到北京时间 12:00」(UTC 04:00, 距开始 ~3.6h),主 Opus 完成 5 个 tick 后**自作主张提前 ~3 小时**结案停 loop。用户怒。
+
+**问题根因**:旧 §10.4 把"明示完成态"和"客观时间停"混为一谈,允许 Opus 在"已达成"时自主停;但客观时间停止条件下,"目标达成"≠"允许停",必须守到时刻才能停,中间没活必须**找活**。
+
+### 新规则要点
+
+`/betterloop §10.4` 重写为**五档分轨**,每档行为明确:
+
+| 类别 | 触发模式 | Opus 行为 |
+|---|---|---|
+| **A. 客观时间停** | `UTC HH:MM` / `北京 HH:MM` / `N 小时后` / `YYYY-MM-DD HH:MM` | 守到该时刻才停,**严禁提前**;活完用 §6 找活 |
+| **B. 客观完成停** | "做完 N 件事" / "把 X 改成 Y" / "全部修完" | 全部达成才停;未达成不得停;不得 Opus 主观判"接近完美" |
+| **C. 主观授权停** | "你觉得 X 就可以停" / "你认为做完了就停" | Opus 自主判断,可达成即停 |
+| **D. 明示永续** | "永不停息" / "一直跑" / "持续迭代" / "不要停" | 仅 §10.1-3 退出,绝不自主停 |
+| **E. 模糊态** | 无明示边界 | 倾向继续,auditor 判达成才允许自主停 |
+
+### §6 "没活了"找活硬循环 — 扩充
+
+新加了 7 个 subagent 找活路径(code-explorer / security-reviewer / typescript-reviewer / refactor-cleaner / silent-failure-hunter / deep-research / 自动排优先级清单),绝不允许空 loop sleep。
+
+### Files
+
+- `plugin/commands/betterloop.md` § 10.4 全段重写(140 → 200 行)+ 关键差异表 A/B vs C + 启动告知模板分轨
+- `plugin/.claude-plugin/plugin.json` v0.18.0.0 + 新描述
+- `.claude-plugin/marketplace.json` v0.18.0.0 + 五档分轨摘要
+- `VERSION` 0.18.0.0
+- `CHANGELOG.md`(本条目)
+
+### Migration
+
+- 旧版用户的 betterloop loop 不受影响(只是 Opus 决策更严)。
+- 启动 `/betterloop` 时,Opus **第一轮回复**会告知"侦测到客观/主观/永续/模糊态:X",可在第一轮纠正解读。
+
+
 ## [0.17.0.0] - 2026-05-21
 
 ### Added (MINOR · /betterloop slash command 内置 + §10.4 自主停规则)

@@ -1,7 +1,7 @@
 {
   "name": "fruity-skills",
-  "version": "0.17.0.0",
-  "description": "/betterloop slash command 内置 + §10.4 自主停规则 — 命令模板进 plugin (commands/betterloop.md), §10 加条件 D: 原 prompt 含明示停止条件且实际达到时主 Opus 自主停 (永不停息 / 模糊态 / 明示完成三档判定). 配套 betterloop-auditor subagent 仍按 6 问决策流强制审.",
+  "version": "0.18.0.0",
+  "description": "/betterloop §10.4 重写 — 客观/主观停止条件分轨铁律: 客观时间停(A) / 客观完成停(B) 严禁主 Opus 主观提前停; 主观授权停(C) / 模糊态(E) 才允许 Opus 自决; 永续(D) 仅明令才停. 没活也不空 loop, 必走 §6 subagent 找活 (code-explorer / security-reviewer / refactor-cleaner / silent-failure-hunter).",
   "author": {
     "name": "FruityMaxine",
     "email": "donaldholmestte@gmail.com"
