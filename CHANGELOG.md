@@ -3,6 +3,22 @@
 遵 SemVer 4 段制 `MAJOR.MINOR.PATCH.BUILD`。
 
 
+## [0.19.0.0] - 2026-06-05
+
+### Added (MINOR)
+
+- 新增 `/fruity-learn` 命令(`plugin/commands/fruity-learn.md`):从当前 session 总结教训/偏好/操作步骤/TIL,主 Opus 直接做(不派 background Haiku),默认 dry-run + 用户拍板,沿用既有 memory 目录结构;子命令 list/search/retire/promote。
+
+### Changed
+
+- 拆除/禁用 `critical-redline` pre-tool hook(`pre-tool-critical-redline.py/.sh` 精简,`hooks.json` 去注册)。该硬拦层在 bypassPermissions + settings.json deny 兜底环境下冗余,改由 settings.json deny 列表作唯一硬兜底。
+
+### Chore
+
+- `.gitignore` 增加 `*.bak-*`,排除 hook 禁用时产生的时间戳备份文件。
+- marketplace.json 两处 version 对齐到 0.19.0.0。
+
+
 ## [0.18.0.0] - 2026-05-22
 
 ### Changed (MINOR · §10.4 重写 — 客观/主观停止条件五档分轨铁律)
